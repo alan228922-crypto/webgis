@@ -1,0 +1,57 @@
+{% load static %}
+{% load worksite_auth %}
+{% worksite_role_label request.user as role_label %}
+{% worksite_is_manager_or_developer request.user as can_maintain %}
+{% worksite_is_developer request.user as can_open_admin %}
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Worksite GIS{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'home/css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="site-title" href="{% url 'index' %}" aria-label="Worksite GIS 首頁">
+                <span class="site-mark" aria-hidden="true">WG</span>
+                <span class="site-brand-copy"><strong>Worksite GIS</strong><small>工程地質檢核</small></span>
+            </a>
+            {% if worksite_demo %}<strong class="status-badge">Synthetic Data · {{ worksite_demo_scenario }}</strong>{% endif %}
+            <nav class="site-nav" aria-label="主要導覽">
+                <a href="{% url 'index' %}">首頁</a>
+                <a class="site-nav-primary" href="{% url 'map-dashboard' %}">工區地圖</a>
+                {% if request.user.is_authenticated %}
+                    <span class="site-nav-account" aria-label="目前登入帳號與角色">
+                        <span>{{ request.user.get_username }}</span>
+                        {% if role_label %}<small>{{ role_label }}</small>{% endif %}
+                    </span>
+                    {% if can_maintain %}
+                        <a href="{% url 'home-maintainer-api-services' %}">API 維護</a>
+                        <a href="{% url 'home-maintainer-gis-layers' %}">GIS 圖層</a>
+                        <a href="{% url 'home-maintainer-data-tables' %}">資料表</a>
+                        <a href="{% url 'home-maintainer-plans' %}">工區規劃</a>
+                    {% endif %}
+                    {% if can_open_admin %}<a href="/admin/">Django Admin</a>{% endif %}
+                    <a href="{% url 'password_change' %}">修改密碼</a>
+                    <form method="post" action="{% url 'logout' %}" style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit">登出</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">登入</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <small>© Worksite GIS 工程地質檢核</small>
+    </footer>
+</body>
+</html>

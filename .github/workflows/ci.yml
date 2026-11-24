@@ -1,0 +1,43 @@
+name: Code-Only Verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out the candidate
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Set up Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install reviewed test and scanner dependencies
+        run: python -m pip install -r requirements-deployment.txt detect-secrets==1.5.0
+
+      - name: Verify inside a loopback-only network namespace
+        run: |
+          sudo -n unshare --net -- bash -euc '
+            ip link set dev lo up
+            exec runuser -u "$1" -- env -i PATH="$2" bash -euc "
+              python -B scripts/ci/check-secrets.py
+              bash scripts/ci/code-only.sh
+            "
+          ' ci-network "$(id -un)" "$PATH"

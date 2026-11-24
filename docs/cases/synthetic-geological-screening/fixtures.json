@@ -1,0 +1,325 @@
+{
+  "worksite": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "id": 0,
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                121.00099063130357,
+                24.992979851208883
+              ],
+              [
+                121.00099063854037,
+                24.99388269027711
+              ],
+              [
+                121.0,
+                24.993882693574893
+              ],
+              [
+                121.0,
+                24.992979854506537
+              ],
+              [
+                121.00099063130357,
+                24.992979851208883
+              ]
+            ]
+          ]
+        },
+        "properties": {
+          "source": "synthetic",
+          "county": "untrusted-fixture-field"
+        }
+      }
+    ]
+  },
+  "layers": {
+    "drill": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              121.0002476587305,
+              24.993431273848298
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        },
+        {
+          "type": "Feature",
+          "id": 1,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              121.00128782539845,
+              24.99343126848127
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        },
+        {
+          "type": "Feature",
+          "id": 2,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              121.00148595238278,
+              24.993431266634555
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        },
+        {
+          "type": "Feature",
+          "id": 3,
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              121.00149585873199,
+              24.993431266535286
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        }
+      ]
+    },
+    "liquefaction": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  121.00128782069459,
+                  24.992979848933512
+                ],
+                [
+                  121.00128783010244,
+                  24.99388268800164
+                ],
+                [
+                  121.00049531927021,
+                  24.99388269275045
+                ],
+                [
+                  121.00049531565182,
+                  24.992979853682122
+                ],
+                [
+                  121.00128782069459,
+                  24.992979848933512
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        },
+        {
+          "type": "Feature",
+          "id": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  121.00074297483458,
+                  24.993205562428948
+                ],
+                [
+                  121.00074297754838,
+                  24.99365698196309
+                ],
+                [
+                  121.00024765918279,
+                  24.993656983611963
+                ],
+                [
+                  121.0002476582782,
+                  24.993205564077783
+                ],
+                [
+                  121.00074297483458,
+                  24.993205562428948
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        },
+        {
+          "type": "Feature",
+          "id": 2,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  121.00113923099242,
+                  24.993521553599454
+                ],
+                [
+                  121.00113923265693,
+                  24.993702121408706
+                ],
+                [
+                  121.000990637093,
+                  24.993702122472232
+                ],
+                [
+                  121.0009906356456,
+                  24.99352155466297
+                ],
+                [
+                  121.00113923099242,
+                  24.993521553599454
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        }
+      ]
+    },
+    "dip_slope": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  121.00104016248883,
+                  24.992934708914593
+                ],
+                [
+                  121.00104017084733,
+                  24.99392783188963
+                ],
+                [
+                  120.99995046805489,
+                  24.993927835517194
+                ],
+                [
+                  120.99995046845292,
+                  24.992934712542
+                ],
+                [
+                  121.00104016248883,
+                  24.992934708914593
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        }
+      ]
+    },
+    "rock_fall": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  121.00123829003401,
+                  24.993070133265704
+                ],
+                [
+                  121.00123829093859,
+                  24.99316041717635
+                ],
+                [
+                  121.00113922766353,
+                  24.9931604179678
+                ],
+                [
+                  121.00113922683131,
+                  24.993070134057145
+                ],
+                [
+                  121.00123829003401,
+                  24.993070133265704
+                ]
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        }
+      ]
+    },
+    "debris_flow_track": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": 0,
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                120.99975234163136,
+                24.99325070603244
+              ],
+              [
+                121.0,
+                24.993250706238545
+              ]
+            ]
+          },
+          "properties": {
+            "source": "synthetic",
+            "county": "untrusted-fixture-field"
+          }
+        }
+      ]
+    }
+  }
+}

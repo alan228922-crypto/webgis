@@ -1,0 +1,54 @@
+{% extends 'home/base.html' %}
+{% block title %}API 管理{% endblock %}
+{% block content %}
+<section class="hero maintainer-page maintainer-api-page">
+  <header class="maintainer-page-header">
+    <a class="maintainer-breadcrumb-home" href="{% url 'index' %}">返回首頁</a>
+    <nav class="maintainer-breadcrumb" aria-label="頁面位置"><span>Worksite GIS</span><span aria-hidden="true">/</span><strong>維護者專區</strong></nav>
+    <div class="maintainer-heading">
+      <div><p class="eyebrow">維護者專區</p><h1>API 管理</h1><p>檢查外部資料服務、更新頻率、格式與最近健康狀態；憑證只從環境變數讀取。</p></div>
+      <span class="maintainer-page-code">API SERVICES</span>
+    </div>
+  </header>
+  <section class="maintainer-panel" aria-labelledby="api-services-heading">
+    <div class="maintainer-panel-heading"><div><p class="panel-label">SERVICE HEALTH</p><h2 id="api-services-heading">服務狀態清單</h2></div><span class="maintainer-panel-note">每 60 秒自動更新</span></div>
+    <div class="table-wrap maintainer-table-wrap"><table class="maintainer-table api-services-table"><caption class="visually-hidden">API 服務狀態</caption><thead><tr><th>服務</th><th>端點</th><th>狀態</th><th>格式</th><th>最後檢查</th><th>錯誤摘要</th></tr></thead><tbody id="service-rows"><tr><td class="table-state-message" colspan="6">載入中…</td></tr></tbody></table></div>
+  </section>
+</section>
+<script>
+function appendServiceCell(row, value) {
+  const cell = document.createElement('td');
+  cell.textContent = value;
+  row.appendChild(cell);
+}
+function renderApiServices(data) {
+  const rows = document.getElementById('service-rows');
+  rows.replaceChildren();
+  rows.dataset.serviceCount = data.services.length;
+  data.services.forEach(item => {
+    const row = document.createElement('tr');
+    appendServiceCell(row, item.name + ' (' + item.slug + ')');
+    appendServiceCell(row, (item.base_url || '') + (item.endpoint || ''));
+    appendServiceCell(row, item.status);
+    appendServiceCell(row, item.data_format || '—');
+    appendServiceCell(row, item.last_checked_at || '尚未測試');
+    appendServiceCell(row, item.error_summary || '—');
+    rows.appendChild(row);
+  });
+}
+function refreshApiServices() {
+  fetch('/api/maintainer/api-services/').then(response => response.json()).then(renderApiServices).catch(() => {
+    const rows = document.getElementById('service-rows');
+    rows.replaceChildren();
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 6;
+    cell.textContent = '載入失敗';
+    row.appendChild(cell);
+    rows.appendChild(row);
+  });
+}
+refreshApiServices();
+setInterval(refreshApiServices, 60000);
+</script>
+{% endblock %}

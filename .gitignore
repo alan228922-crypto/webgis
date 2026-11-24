@@ -1,0 +1,22 @@
+# Local secrets and machine-specific configuration
+.env
+
+# Local database and virtual environment
+db.sqlite3
+.venv/
+
+# Python and test caches/artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.test-artifacts/
+.tmp-tests/
+
+# Local OS and development logs
+.DS_Store
+runserver.log
+runserver.error.log
+
+# Local deployment build and Demo runtime
+staticfiles/
+.worksite-demo/

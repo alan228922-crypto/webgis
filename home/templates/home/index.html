@@ -1,0 +1,107 @@
+{% extends 'home/base.html' %}
+{% block title %}Worksite GIS — Engineering Geology Screening{% endblock %}
+{% block content %}
+<section class="hero dashboard-hero">
+  <div class="hero-meta">
+    <span class="hero-status"><span class="status-dot" aria-hidden="true"></span>工程資訊整合平台</span>
+    <p class="dashboard-clock" id="dashboard-clock">Asia/Taipei</p>
+  </div>
+  <div class="hero-layout">
+    <div class="hero-copy">
+      <p class="eyebrow">工程地質檢核</p>
+      <h1>Worksite GIS — Engineering Geology Screening</h1>
+      <p class="hero-lead">集中整合 GIS 地圖、即時資料與工區安全資訊，協助快速掌握現場狀態與風險。</p>
+      <div class="hero-actions">
+        <a class="primary-button" href="{% url 'map-dashboard' %}">開啟工區地圖 <span aria-hidden="true">→</span></a>
+        <a class="secondary-link" href="#status-grid">檢視平台狀態</a>
+      </div>
+    </div>
+    <aside class="hero-capabilities" aria-label="平台核心能力">
+      <p class="panel-label">PLATFORM CAPABILITIES</p>
+      <ul>
+        <li><span aria-hidden="true">01</span><div><b>GIS 空間資訊</b><small>圖層、離線底圖與工區視圖</small></div></li>
+        <li><span aria-hidden="true">02</span><div><b>即時資料整合</b><small>服務狀態與現場資訊集中呈現</small></div></li>
+        <li><span aria-hidden="true">03</span><div><b>安全與風險掌握</b><small>目前警報與歷史紀錄分層檢視</small></div></li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<section class="overview-section" aria-labelledby="status-section-heading">
+  <div class="section-heading">
+    <div><p class="eyebrow">SYSTEM OVERVIEW</p><h2 id="status-section-heading">平台狀態總覽</h2></div>
+    <p>資訊由既有服務自動更新，不變更資料來源與更新週期。</p>
+  </div>
+  <div class="info-grid status-grid" id="status-grid">
+    <article class="info-card status-card" data-state="loading"><div class="card-heading"><span class="card-code">LAYER</span><span class="status-badge">圖層</span></div><h3>圖層資料</h3><p class="status-value" id="layer-status" aria-live="polite">讀取中…</p><p class="card-caption">GIS 圖層目錄載入狀態</p></article>
+    <article class="info-card status-card" data-state="loading"><div class="card-heading"><span class="card-code">BASEMAP</span><span class="status-badge">底圖</span></div><h3>離線底圖</h3><p class="status-value" id="basemap-status" aria-live="polite">讀取中…</p><p class="card-caption">本機地圖圖磚可用狀態</p></article>
+    <article class="info-card status-card" data-state="loading"><div class="card-heading"><span class="card-code">SERVICE</span><span class="status-badge">API</span></div><h3>服務狀態</h3><p class="status-value" id="service-status" aria-live="polite">讀取中…</p><p class="card-caption">外部服務與 API 健康摘要</p></article>
+    <article class="info-card status-card" data-state="loading"><div class="card-heading"><span class="card-code">DATA</span><span class="status-badge">資料</span></div><h3>資料完整性</h3><p class="status-value" id="data-status" aria-live="polite">讀取中…</p><p class="card-caption">既有處理資料驗證摘要</p></article>
+  </div>
+</section>
+
+<section class="alerts-section" aria-labelledby="alerts-section-heading">
+  <div class="section-heading">
+    <div><p class="eyebrow">ALERT CENTER</p><h2 id="alerts-section-heading">警報資訊</h2></div>
+    <p>目前事件與歷史紀錄分區呈現。</p>
+  </div>
+  <div class="alerts-grid">
+    <article class="info-card alert-panel current-alerts" id="alert-panel" data-state="loading"><div class="card-heading"><span class="card-code">CURRENT</span><span class="status-badge">即時</span></div><h3>目前警報</h3><p class="status-value" id="alert-status" aria-live="polite">讀取中…</p><ul id="alert-list"></ul></article>
+    <article class="info-card alert-panel history-alerts" id="alert-history" data-state="loading"><div class="card-heading"><span class="card-code">HISTORY</span><span class="status-badge">紀錄</span></div><h3>歷史告警</h3><p class="status-value" id="alert-history-status" aria-live="polite">讀取中…</p><ul id="alert-history-list"></ul></article>
+  </div>
+</section>
+<script>
+function updateClock() { document.getElementById('dashboard-clock').textContent = new Intl.DateTimeFormat('zh-TW', {timeZone: 'Asia/Taipei', dateStyle: 'medium', timeStyle: 'medium'}).format(new Date()) + '（Asia/Taipei）'; }
+updateClock();
+setInterval(updateClock, 1000);
+function setCardState(elementId, state) { document.getElementById(elementId).closest('.info-card').dataset.state = state; }
+function refreshAlerts() {
+  fetch('/api/alerts/current/').then(r => r.json()).then(data => {
+    const list = document.getElementById('alert-list'); list.textContent = '';
+    const state = data.status;
+    const sourceStatus = {disabled: '未設定 CWA 來源', stale: 'CWA 過期快取', unknown: 'CWA 來源未確認'}[state] || 'CWA 暫時無法使用';
+    document.getElementById('alert-status').textContent = state === 'ok'
+      ? (data.alerts.length ? data.alerts.length + ' 筆有效警報' : '目前沒有有效警報')
+      : sourceStatus;
+    setCardState('alert-status', state === 'ok' ? (data.alerts.length ? 'error' : 'success') : 'warning');
+    data.alerts.forEach(alert => {
+      const item = document.createElement('li');
+      const stale = state === 'stale' && String(alert.source).toUpperCase() === 'CWA';
+      item.textContent = '[' + alert.severity + '] ' + alert.title + (stale ? '｜過期快取' : '');
+      list.appendChild(item);
+    });
+  }).catch(() => { document.getElementById('alert-status').textContent = '目前無法更新警報'; setCardState('alert-status', 'warning'); });
+}
+refreshAlerts();
+setInterval(refreshAlerts, 60000);
+function refreshAlertHistory() {
+  fetch('/api/alerts/history/?limit=10').then(r => r.json()).then(data => {
+    const list = document.getElementById('alert-history-list');
+    list.textContent = '';
+    document.getElementById('alert-history-status').textContent = data.alerts.length ? data.alerts.length + ' 筆歷史告警' : '目前沒有歷史告警';
+    setCardState('alert-history-status', data.alerts.length ? 'info' : 'success');
+    data.alerts.forEach(alert => { const item = document.createElement('li'); item.textContent = '[' + alert.severity + '] ' + alert.title; list.appendChild(item); });
+  }).catch(() => { document.getElementById('alert-history-status').textContent = '歷史告警暫時無法取得'; setCardState('alert-history-status', 'warning'); });
+}
+refreshAlertHistory();
+setInterval(refreshAlertHistory, 60000);
+</script>
+<script>
+function refreshPlatformStatus() {
+  fetch('/api/status/').then(r => { if (!r.ok) throw new Error('status unavailable'); return r.json(); }).then(data => {
+    const api = data.api_services || { count: 0, healthy: 0, error: 0, degraded: 0 };
+    const processed = data.processed_data || { count: 0, valid: 0, invalid: 0 };
+    document.getElementById('layer-status').textContent = data.layers.count + ' layers';
+    setCardState('layer-status', 'success');
+    document.getElementById('basemap-status').textContent = data.basemap.available ? (data.basemap.file_count ? data.basemap.file_count.toLocaleString() + ' tiles' : '有圖磚｜數量未確認') : 'unavailable';
+    setCardState('basemap-status', data.basemap.available ? 'success' : 'warning');
+    document.getElementById('service-status').textContent = data.status === 'ok' ? '正常（API ' + api.healthy + '/' + api.count + ' healthy）' : '需檢查（error ' + api.error + '、degraded ' + api.degraded + '）';
+    setCardState('service-status', data.status === 'ok' ? 'success' : 'warning');
+    document.getElementById('data-status').textContent = processed.available ? processed.valid + '/' + processed.count + ' 已驗證（失敗 ' + processed.invalid + '）' : '無可讀驗證報告';
+    setCardState('data-status', !processed.available || processed.invalid ? 'warning' : 'success');
+  }).catch(() => { document.getElementById('service-status').textContent = '無法取得平台狀態'; setCardState('service-status', 'error'); });
+}
+refreshPlatformStatus();
+setInterval(refreshPlatformStatus, 60000);
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% load static %}
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Worksite GIS — Engineering Geology Screening</title>
+  {% if worksite_demo %}
+  <link rel="stylesheet" href="{% static 'home/vendor/leaflet/leaflet.css' %}">
+  <link rel="stylesheet" href="{% static 'home/vendor/geoman/leaflet-geoman.css' %}">
+  {% else %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.0/dist/leaflet-geoman.css">
+  {% endif %}
+  <link rel="stylesheet" href="{% static 'home/css/dashboard.css' %}?v=20260817-traffic4">
+  <link rel="stylesheet" href="{% static 'home/css/mrt.css' %}?v=20260818-mrt9">
+</head>
+<body class="battle-body"{% if worksite_demo %} data-demo="true"{% endif %}>
+  <span hidden data-i18n="brand.eyebrow"></span><span hidden data-i18n="basemap.eyebrow"></span><span hidden data-i18n="basemap.title"></span><span hidden data-i18n="overlay.eyebrow"></span><span hidden data-i18n="overlay.title"></span><span hidden data-i18n="worksite.eyebrow"></span><span hidden data-i18n="intel.plan"></span><span hidden data-i18n="intel.realtime"></span><span hidden data-i18n="intel.nearby"></span><span hidden data-i18n="intel.alert"></span>
+  <header class="battle-header" id="battle-header">
+    <button class="icon-button" id="drawer-toggle" type="button" aria-controls="layer-drawer" aria-expanded="true" title="圖層選單">☰</button>
+    <div class="brand-block"><span class="eyebrow">{% if worksite_demo %}Synthetic Data · {{ worksite_demo_scenario }}{% else %}WORKSITE GIS{% endif %}</span><h1 id="project-title">Worksite GIS — Engineering Geology Screening</h1><p>工程地質檢核</p></div>
+    <label class="project-picker"><span>工程專案</span><select id="project-switcher" aria-label="切換工程專案"></select></label>
+    <button class="quiet-button" id="new-project-button" type="button">＋ 新增專案</button>
+    <button class="quiet-button" id="worksite-toggle" type="button" aria-controls="worksite-flow" aria-expanded="false">建立／編輯工區</button>
+    <div class="weather-chip" id="header-weather" aria-live="polite"><span>☁</span><span>氣象待載入</span></div>
+    <time class="taipei-clock" id="taipei-clock">--</time>
+    <button class="icon-button" id="settings-button" type="button" aria-controls="settings-modal" aria-expanded="false" aria-label="開啟設定">⚙</button>
+  </header>
+
+  <main class="dashboard-grid">
+    <aside class="layer-drawer" id="layer-drawer" aria-label="圖層控制">
+      <section><div class="section-heading"><div><span class="eyebrow">BASEMAP</span><h2>Map Tiles</h2></div></div>
+        <div class="basemap-grid" id="basemap-grid">
+          {% if worksite_demo %}<p class="muted">離線展示，外部底圖已停用。</p>{% else %}
+          <button class="basemap-card" data-basemap="esri-satellite"><img class="tile-preview-image" src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/6/28/53" alt="Esri World Imagery preview"><b>Esri World Imagery</b><small>可用</small></button>
+          <div class="basemap-card basemap-placeholder" data-preview="basemap-tgos-preview" aria-hidden="true"></div>
+          <button class="basemap-card is-active" data-basemap="osm"><img class="tile-preview-image" src="https://tile.openstreetmap.org/6/53/28.png" alt="OpenStreetMap preview"><b>OpenStreetMap</b><small>目前使用</small></button>
+          <button class="basemap-card" data-basemap="carto"><img class="tile-preview-image" src="https://a.basemaps.cartocdn.com/dark_all/6/53/28.png" alt="CartoDB preview"><b>CartoDB Dark</b><small>可用</small></button>
+          {% endif %}
+        </div>
+      </section>
+      <section><div class="section-heading"><div><span class="eyebrow">OVERLAYS</span><h2>GIS Data</h2></div></div><details id="geology-layer-details" class="geology-layer-details" aria-expanded="false"><summary>查看地圖圖層</summary><p class="muted">地質圖層隨目前視窗探索</p><div id="layer-list" class="layer-list"><p class="muted">圖層載入中…</p></div></details></section>
+      <section><button class="settings-launch" type="button" data-open-settings>SETTING <span>→</span></button></section>
+      <section aria-label="網站導覽">
+        <nav aria-label="Worksite GIS 網站導覽">
+          <a class="settings-launch" href="{% url 'index' %}">返回首頁 <span>→</span></a>
+          <a class="settings-launch" href="{% url 'maintainer-api-services' %}">API 管理 <span>→</span></a>
+          <a class="settings-launch" href="{% url 'maintainer-gis-layers' %}">GIS 圖層管理 <span>→</span></a>
+          <a class="settings-launch" href="{% url 'maintainer-data-tables' %}">資料表管理 <span>→</span></a>
+          <a class="settings-launch" href="{% url 'maintainer-plans' %}">工區規劃管理 <span>→</span></a>
+        </nav>
+      </section>
+    </aside>
+
+    <section class="map-stage" aria-label="中央地圖工作區">
+      <div id="map" aria-label="GIS 地圖"></div>
+      <div class="map-status-card" id="worksite-status-card"><span class="status-dot"></span><div><b id="setup-status-label">未定位</b><small id="setup-status-detail">請先搜尋工區位置</small></div></div>
+      <section class="worksite-flow" id="worksite-flow" hidden>
+        <div class="flow-title"><span class="eyebrow">WORKSITE SETUP</span><b>工區設置</b><button id="flow-collapse" type="button" aria-label="收合工區設置">−</button></div>
+        <ol class="stepper"><li class="is-active" data-step="search">1 搜尋</li><li data-step="center">2 定位</li><li data-step="nearby">3 周邊資料</li><li data-step="edit">4 繪圖</li></ol>
+        <form id="location-search-form" class="search-row" method="post" action="{% url 'project-location-search' 'worksite' %}">{% csrf_token %}<input id="location-query" name="query" placeholder="工程名稱、地址、地標或 24.985556,121.310278" autocomplete="off"><button type="submit">搜尋</button></form>
+        <div id="location-candidates" class="candidate-list" aria-live="polite"></div>
+        <div class="flow-actions"><button id="save-search-center" type="button" disabled>保存搜尋中心</button><button id="start-worksite-edit" type="button" disabled>開始編輯工區</button></div>
+      </section>
+
+      <section class="cad-toolbar" id="plan-drawing-tools" data-project-slug="worksite" hidden>
+        <div class="cad-row"><span class="eyebrow">CAD MODE</span><input id="plan-draft-name" value="工區規劃草稿" aria-label="規劃名稱"><select id="plan-status" aria-label="規劃狀態"><option value="draft">草稿</option><option value="review">送審</option><option value="approved">已核定</option><option value="rejected">退回</option></select></div>
+        <div class="cad-row"><button data-draw-mode="point" title="點" hidden style="display:none;">點</button><button data-draw-mode="polyline" title="折線">線</button><button data-draw-mode="polygon" title="多邊形">面</button><button data-draw-mode="rectangle" title="矩形">矩形</button><button id="measure-distance" type="button">量距</button><button id="measure-area" type="button">量面積</button><button id="undo-plan-draft" type="button">復原</button><button id="redo-plan-draft" type="button">重做</button><button id="clear-plan-draft" type="button">清除</button></div>
+        <div class="cad-row"><select id="feature-category"><option>施工分區</option><option>臨時設施</option><option>交通維持</option><option>出入口</option><option>註記</option><option>正式工程範圍</option></select><input id="change-summary" placeholder="版本變更摘要"><button id="import-plan-geojson" type="button">匯入</button><button id="export-plan-geojson" type="button">匯出</button><button id="save-plan-draft" class="accent-button" type="button">儲存新版本</button><input id="plan-geojson-file" type="file" accept=".geojson,.json" hidden></div>
+        <p id="plan-drawing-status" class="muted">可使用地圖左側繪圖控制；Esc 取消、Delete 刪除、Ctrl+Z／Ctrl+Y 復原重做。</p>
+      </section>
+    </section>
+
+    <aside class="intel-panel" id="intel-panel" aria-label="工區資訊">
+      <section class="intel-card worksite-summary-card"><span class="eyebrow">WORKSITE</span><h2>工區</h2><div id="worksite-empty-state" class="worksite-empty-state"><b>目前尚未建立工區</b><p>請先建立一個工區，才能進行工程地質初步檢核。</p><button id="create-first-worksite" class="accent-button" type="button">建立第一個工區</button></div><div id="worksite-ready-state" class="worksite-ready-state" hidden><p id="worksite-ready-message">已建立工區範圍</p><button id="edit-worksite" class="quiet-button" type="button">編輯工區</button> <a id="export-selected-worksite" hidden>匯出工區 GeoJSON</a></div><details id="worksite-technical-details" class="technical-details"><summary>查看詳細資料</summary><div id="plan-list" data-project-slug="worksite"><p class="muted">尚未選取規劃</p></div><dl class="summary-grid"><div><dt>版本</dt><dd id="summary-version">—</dd></div><div><dt>狀態</dt><dd id="summary-status">—</dd><small id="summary-publication"></small></div><div><dt>圖形</dt><dd id="summary-features">0</dd></div><div><dt>更新</dt><dd id="summary-updated">—</dd></div><div><dt>面積</dt><dd id="summary-area">0 m²</dd></div><div><dt>長度</dt><dd id="summary-length">0 m</dd></div></dl></details></section>
+      <section class="intel-card"><span class="eyebrow" data-i18n="intel.realtime">即時資料</span><h2>即時資料</h2><div class="realtime-list">
+        <label><input type="checkbox" data-live="train"{% if worksite_demo %} disabled{% endif %}>臺鐵列車狀態 <span id="live-train-status">{% if worksite_demo %}已停用{% else %}待命{% endif %}</span></label>
+        <label><input type="checkbox" data-live="traffic"{% if worksite_demo %} disabled{% endif %}>路況壅塞水準 <span id="live-traffic-status">{% if worksite_demo %}已停用{% else %}待命{% endif %}</span></label>
+        <label><input type="checkbox" data-live="disaster">區域災害潛勢 <span id="live-disaster-status">待命</span></label>
+        <label><input type="checkbox" data-live="radar"{% if worksite_demo %} disabled{% endif %}>雨量雷達回波 <span id="live-radar-status">{% if worksite_demo %}已停用{% else %}待命{% endif %}</span></label>
+        <label><input type="checkbox" data-live="dynamic-flood"{% if worksite_demo %} disabled{% endif %}>動態淹水潛勢 <span id="live-dynamic-flood-status">{% if worksite_demo %}已停用{% else %}待命{% endif %}</span></label>
+      </div></section>
+      <section class="intel-card"><div class="card-heading"><div><span class="eyebrow">NEARBY / 10 KM</span><h2>周邊站點</h2></div><div class="mini-legend"><span>☁ 氣象</span><span>▣ CCTV</span></div></div><div id="weather-layer" class="data-stack"><p class="muted">請先搜尋工區位置</p></div><div id="cctv-layer" class="data-stack"><p class="muted">請先搜尋工區位置</p></div><div id="cctv-viewer" class="cctv-viewer" hidden><div class="cctv-viewer-heading"><b id="cctv-viewer-title">CCTV 影像</b><button id="cctv-viewer-close" type="button">關閉</button></div><video id="cctv-player" controls playsinline hidden></video><img id="cctv-snapshot" alt="CCTV 即時影像" hidden><p id="cctv-viewer-status" class="muted">請選擇 CCTV</p></div></section>
+      <section class="intel-card alert-card"><span class="eyebrow">REAL-TIME ALERT</span><h2>即時警報 <small id="alerts-status" class="muted">同步中</small></h2><div id="current-alerts"><p class="muted">讀取警報中…</p></div><details><summary>最近警報紀錄</summary><div id="alert-history-list"></div></details></section>
+      <section class="intel-card"><span class="eyebrow">GEOLOGY SCREENING</span><h2>工區工程地質初步檢核</h2><p class="muted">此結果為官方資料的空間提示，不代表正式地質鑑定或施工安全判定。</p><form id="geology-screening-form"><label for="geology-buffer-input">工區緩衝距離（m）</label> <input id="geology-buffer-input" type="number" min="0" step="any" value="0" required> <button type="submit" class="quiet-button">更新固定範圍檢核</button></form><p id="geology-worksite-source" class="muted" aria-live="polite"></p><div id="geology-summary-compact" class="data-stack"><p class="muted">建立工區後，這裡會顯示初步檢核摘要。</p></div><details id="geology-technical-details" class="technical-details"><summary>查看詳細資料</summary><div id="geology-screening-results" class="data-stack"><div id="geology-summary-results"><p class="muted">尚未載入地質雲摘要</p></div><div id="geology-layer-screening-results"><p class="muted">尚未載入地質雲資料</p></div></div></details></section>
+    </aside>
+  </main>
+
+  <div class="modal-backdrop" id="settings-modal" hidden><section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title"><button class="modal-close" id="settings-close" type="button">×</button><span class="eyebrow">PREFERENCES</span><h2 id="settings-title">平台設定</h2><label>Language<select id="language-setting"><option value="zh-Hant">繁體中文</option><option value="en">English</option></select></label><fieldset><legend>Theme</legend><label><input type="radio" name="theme" value="light"> Light mode</label><label><input type="radio" name="theme" value="dark" checked> Dark mode</label></fieldset></section></div>
+  <div class="modal-backdrop" id="new-project-modal" hidden><form class="settings-modal" id="new-project-form"><button class="modal-close" type="button" data-close-project>×</button><span class="eyebrow">NEW PROJECT</span><h2>建立工程專案</h2><label>名稱<input name="name" required></label><label>Slug<input name="slug" pattern="[a-z0-9-]+" required></label><label>中心緯度<input name="center_latitude" type="number" step="any" value="24.985556"></label><label>中心經度<input name="center_longitude" type="number" step="any" value="121.310278"></label><button class="accent-button" type="submit">建立並切換</button></form></div>
+  <div class="alert-overlay" id="alert-overlay" hidden role="alert"><div><span id="alert-overlay-icon">!</span><h2 id="alert-overlay-title">安全警報</h2><p id="alert-overlay-summary"></p><button id="alert-overlay-close" type="button">我知道了</button></div></div>
+  {% if worksite_demo %}
+  <script src="{% static 'home/vendor/leaflet/leaflet.js' %}"></script>
+  <script src="{% static 'home/vendor/geoman/leaflet-geoman.min.js' %}"></script>
+  {% else %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.0/dist/leaflet-geoman.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16"></script>
+  {% endif %}
+  <script src="{% static 'home/js/map.js' %}?v=20260825-worksite-search1-phase3"></script>
+</body>
+</html>

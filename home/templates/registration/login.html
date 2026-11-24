@@ -1,0 +1,17 @@
+{% extends "home/base.html" %}
+
+{% block title %}登入｜Worksite GIS{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <p class="eyebrow">Worksite GIS</p>
+    <h1>登入</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="primary-button" type="submit">登入</button>
+    </form>
+    <p><a href="{% url 'password_reset' %}">忘記密碼？</a></p>
+</section>
+{% endblock %}

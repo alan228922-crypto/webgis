@@ -1,0 +1,30 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% block title %}工區規劃管理{% endblock %}
+{% block content %}
+<main class="content-shell maintainer-page maintainer-plans-page" id="plan-editor" data-project-slug="{{ maintainer_project_slug }}" data-plans-endpoint="{{ maintainer_plans_endpoint }}">
+  <header class="maintainer-page-header">
+    <a class="maintainer-breadcrumb-home" href="{% url 'index' %}">返回首頁</a>
+    <nav class="maintainer-breadcrumb" aria-label="頁面位置"><span>Worksite GIS</span><span aria-hidden="true">/</span><strong>工區規劃</strong></nav>
+    <div class="maintainer-heading">
+      <div><p class="eyebrow">PROJECT PLANNING</p><h1>工區規劃管理</h1><p>建立與更新目前專案的規劃版本。GeoJSON geometry 與 metadata 以 JSON 保存。</p></div>
+      <span class="maintainer-page-code">WORKSITE PLANS</span>
+    </div>
+  </header>
+  <section class="maintainer-panel plan-form-panel" aria-labelledby="plan-form-heading">
+    <a class="maintainer-return-link" href="{% url 'index' %}">返回首頁</a>
+    <div class="maintainer-panel-heading"><div><p class="panel-label">PLAN EDITOR</p><h2 id="plan-form-heading">規劃內容</h2></div><span class="maintainer-panel-note">建立／編輯</span></div>
+    <form id="plan-form" class="query-card maintainer-form plan-form-grid">
+      <label>名稱 <input name="name" required maxlength="200"></label>
+      <label>用途 <input name="purpose" maxlength="200"></label>
+      <p class="muted">新工區會儲存為草稿。送審、審核與封存請使用規劃清單的操作。</p>
+      <label>版本 <input name="version" type="number" min="1" value="1"></label>
+      <label class="plan-geometry-field">GeoJSON geometry <textarea name="geometry" rows="4">{}</textarea></label>
+      <div class="form-actions"><button class="primary-button" type="submit">儲存規劃</button><button class="secondary-button" id="plan-cancel" type="button" hidden>取消編輯</button><span id="plan-form-result" class="muted form-result" aria-live="polite"></span></div>
+    </form>
+  </section>
+  <section class="query-card maintainer-panel plan-list-panel"><div class="maintainer-panel-heading"><div><p class="panel-label">PLAN RECORDS</p><h2>現有規劃</h2></div></div><div id="plan-table">讀取中…</div></section>
+</main>
+<script src="{% static 'home/js/maintainer_plans.js' %}"></script>
+{% csrf_token %}
+{% endblock %}

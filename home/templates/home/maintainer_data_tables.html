@@ -1,0 +1,133 @@
+{% extends 'home/base.html' %}
+{% block title %}資料表管理{% endblock %}
+{% block content %}
+<section class="hero maintainer-page maintainer-data-page">
+  <header class="maintainer-page-header">
+    <a class="maintainer-breadcrumb-home" href="{% url 'index' %}">返回首頁</a>
+    <nav class="maintainer-breadcrumb" aria-label="頁面位置"><span>Worksite GIS</span><span aria-hidden="true">/</span><strong>維運工具</strong></nav>
+    <div class="maintainer-heading">
+      <div><p class="eyebrow">維運工具</p><h1>資料表管理</h1><p>檢視已轉換的 JSON 平台資料，並下載對應的 CSV 備查檔。</p></div>
+      <span class="maintainer-page-code">DATA TABLES</span>
+    </div>
+  </header>
+  <section class="maintainer-panel" aria-labelledby="data-tables-heading">
+    <div class="maintainer-panel-heading"><div><p class="panel-label">DATA CATALOG</p><h2 id="data-tables-heading">資料表清單</h2></div><span class="maintainer-panel-note">JSON／CSV</span></div>
+    <div class="table-wrap maintainer-table-wrap">
+    <table class="maintainer-table data-tables-table"><caption class="visually-hidden">平台資料表清單</caption>
+      <thead><tr><th>名稱</th><th>分類</th><th>筆數</th><th>狀態</th><th>操作</th></tr></thead>
+      <tbody id="data-table-list"><tr><td class="table-state-message" colspan="5">載入中…</td></tr></tbody>
+    </table>
+    </div>
+  </section>
+  <section class="query-card maintainer-panel data-preview-panel" id="data-table-preview" hidden>
+    <div class="maintainer-panel-heading"><div><p class="panel-label">RECORD PREVIEW</p><h2 id="data-table-preview-title">資料預覽</h2></div></div>
+    <div class="maintainer-toolbar">
+      <label class="maintainer-search-field">搜尋 <input id="data-table-search" type="search" placeholder="站名、編號或欄位值"></label>
+      <button class="secondary-button" id="data-table-search-submit" type="button">套用</button>
+    </div>
+    <div class="table-wrap maintainer-table-wrap"><table class="maintainer-table preview-table"><thead id="data-table-preview-head"></thead><tbody id="data-table-preview-body"></tbody></table></div>
+    <div class="maintainer-pagination">
+      <p id="data-table-preview-meta" class="muted"></p>
+      <div class="maintainer-pagination-actions"><button class="secondary-button" id="data-table-prev" type="button">上一頁</button><button class="secondary-button" id="data-table-next" type="button">下一頁</button></div>
+    </div>
+  </section>
+</section>
+<script>
+let previewSlug = null;
+let previewOffset = 0;
+let previewQuery = '';
+const previewLimit = 25;
+function loadTablePreview() {
+  if (!previewSlug) return;
+  fetch('/api/maintainer/data-tables/' + encodeURIComponent(previewSlug) + '/?limit=' + previewLimit + '&offset=' + previewOffset + '&q=' + encodeURIComponent(previewQuery))
+    .then(response => response.json()).then(data => {
+      const preview = document.getElementById('data-table-preview');
+      const head = document.getElementById('data-table-preview-head');
+      const body = document.getElementById('data-table-preview-body');
+      const records = data.records || [];
+      const columns = Array.from(new Set(records.flatMap(record => Object.keys(record))));
+      head.replaceChildren();
+      body.replaceChildren();
+      const headerRow = document.createElement('tr');
+      columns.forEach(column => {
+        const cell = document.createElement('th');
+        cell.textContent = column;
+        headerRow.appendChild(cell);
+      });
+      head.appendChild(headerRow);
+      records.forEach(record => {
+        const row = document.createElement('tr');
+        columns.forEach(column => {
+          const cell = document.createElement('td');
+          cell.textContent = record[column] ?? '';
+          row.appendChild(cell);
+        });
+        body.appendChild(row);
+      });
+      document.getElementById('data-table-preview-title').textContent = data.name + '（預覽）';
+      document.getElementById('data-table-preview-meta').textContent = '第 ' + (data.pagination.offset + 1) + '–' + Math.min(data.pagination.offset + data.pagination.limit, data.pagination.total) + ' 筆，共 ' + data.pagination.total + ' 筆';
+      document.getElementById('data-table-prev').disabled = data.pagination.offset === 0;
+      document.getElementById('data-table-next').disabled = !data.pagination.has_next;
+      preview.hidden = false;
+    });
+}
+fetch('/api/maintainer/data-tables/').then(response => response.json()).then(data => {
+  const rows = document.getElementById('data-table-list');
+  rows.textContent = '';
+  (data.tables || []).forEach(item => {
+    const tr = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.textContent = item.name;
+    nameCell.appendChild(document.createElement('br'));
+    const slug = document.createElement('small');
+    slug.textContent = item.slug;
+    nameCell.appendChild(slug);
+    tr.appendChild(nameCell);
+    const categoryCell = document.createElement('td');
+    categoryCell.textContent = item.category;
+    tr.appendChild(categoryCell);
+    const countCell = document.createElement('td');
+    countCell.textContent = item.record_count;
+    tr.appendChild(countCell);
+    const statusCell = document.createElement('td');
+    statusCell.textContent = item.published ? '可用' : '缺少檔案';
+    tr.appendChild(statusCell);
+    const actionsCell = document.createElement('td');
+    const previewButton = document.createElement('button');
+    previewButton.type = 'button';
+    previewButton.dataset.previewSlug = item.slug;
+    previewButton.textContent = '預覽';
+    previewButton.addEventListener('click', () => { previewSlug = item.slug; previewOffset = 0; loadTablePreview(); });
+    actionsCell.appendChild(previewButton);
+    actionsCell.appendChild(document.createTextNode('　'));
+    const jsonLink = document.createElement('a');
+    jsonLink.href = '/api/maintainer/data-tables/' + encodeURIComponent(item.slug) + '/';
+    jsonLink.textContent = 'JSON';
+    actionsCell.appendChild(jsonLink);
+    actionsCell.appendChild(document.createTextNode('　'));
+    if (item.csv_available) {
+      const csvLink = document.createElement('a');
+      csvLink.href = '/api/maintainer/data-tables/' + encodeURIComponent(item.slug) + '/?format=csv';
+      csvLink.textContent = '下載 CSV';
+      actionsCell.appendChild(csvLink);
+    } else {
+      actionsCell.appendChild(document.createTextNode('—'));
+    }
+    tr.appendChild(actionsCell);
+    rows.appendChild(tr);
+  });
+}).catch(() => {
+  const rows = document.getElementById('data-table-list');
+  rows.replaceChildren();
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.colSpan = 5;
+  cell.textContent = '資料載入失敗';
+  row.appendChild(cell);
+  rows.appendChild(row);
+});
+document.getElementById('data-table-prev').addEventListener('click', () => { previewOffset = Math.max(0, previewOffset - previewLimit); loadTablePreview(); });
+document.getElementById('data-table-next').addEventListener('click', () => { previewOffset += previewLimit; loadTablePreview(); });
+document.getElementById('data-table-search-submit').addEventListener('click', () => { previewQuery = document.getElementById('data-table-search').value.trim(); previewOffset = 0; loadTablePreview(); });
+</script>
+{% endblock %}

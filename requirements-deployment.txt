@@ -1,0 +1,4 @@
+-r requirements.txt
+gunicorn>=23,<24
+whitenoise>=6.8,<7
+psycopg[binary]>=3.2,<4

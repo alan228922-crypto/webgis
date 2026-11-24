@@ -1,0 +1,35 @@
+{
+  "case": "Worksite GIS Geological Screening — Reproducible Case Study",
+  "source": "synthetic",
+  "dataset_version": "fixture-v1",
+  "source_published_at": null,
+  "mock_fetched_at": "2025-01-01T00:00:00+00:00",
+  "metric_crs": "EPSG:3826",
+  "origin_m": [
+    250000,
+    2765000
+  ],
+  "stored_crs": "OGC:CRS84",
+  "query": {
+    "mode": "screening",
+    "buffer_m": 50,
+    "display_limits": [
+      1,
+      2
+    ],
+    "worksite_version": 1,
+    "bbox_rule": "projected worksite bounds expanded by buffer, inverse-projected conservatively",
+    "administrative_area": "synthetic-district",
+    "method_version": "worksite-screening-v1"
+  },
+  "tolerances": {
+    "area_m2": 0.02,
+    "ratio": 1e-06,
+    "boundary_distance_m": 1e-06,
+    "independent_projection_control_m": 0.03
+  },
+  "sha256": {
+    "fixtures.json": "5f32809cd11d8e422ca09db5bac7aedcd50bcf65b1541f09db491b6fe4cbf436",
+    "expected.json": "36646f0b5de33db7fed4fa144883b78cceca7fbd735c03b10658738debd6dfa3"
+  }
+}

@@ -1,0 +1,49 @@
+{% extends 'home/base.html' %}
+{% block title %}GIS 圖層管理{% endblock %}
+{% block content %}
+<section class="hero maintainer-page maintainer-gis-page">
+  <header class="maintainer-page-header">
+    <a class="maintainer-breadcrumb-home" href="{% url 'index' %}">返回首頁</a>
+    <nav class="maintainer-breadcrumb" aria-label="頁面位置"><span>Worksite GIS</span><span aria-hidden="true">/</span><strong>維護者專區</strong></nav>
+    <div class="maintainer-heading">
+      <div><p class="eyebrow">維護者專區</p><h1>GIS 圖層管理</h1><p>檢查圖層輸出、格式、CRS、筆數與發布健康狀態。</p></div>
+      <span class="maintainer-page-code">GIS CATALOG</span>
+    </div>
+  </header>
+  <section class="maintainer-panel" aria-labelledby="gis-layers-heading">
+    <div class="maintainer-panel-heading"><div><p class="panel-label">LAYER HEALTH</p><h2 id="gis-layers-heading">圖層健康清單</h2></div><span class="maintainer-panel-note">依既有目錄狀態顯示</span></div>
+    <div class="table-wrap maintainer-table-wrap"><table class="maintainer-table gis-layers-table"><caption class="visually-hidden">GIS 圖層健康狀態</caption><thead><tr><th>圖層</th><th>分類</th><th>格式</th><th>CRS</th><th>筆數</th><th>狀態</th></tr></thead><tbody id="layer-rows"><tr><td class="table-state-message" colspan="6">載入中…</td></tr></tbody></table></div>
+  </section>
+</section>
+<script>
+function appendCell(row, value, className) {
+  const cell = document.createElement('td');
+  if (className) cell.className = className;
+  cell.textContent = value;
+  row.appendChild(cell);
+}
+fetch('/api/maintainer/gis-layers/').then(response => response.json()).then(data => {
+  const rows = document.getElementById('layer-rows');
+  rows.replaceChildren();
+  data.layers.forEach(item => {
+    const row = document.createElement('tr');
+    appendCell(row, item.name + ' (' + item.slug + ')');
+    appendCell(row, item.category);
+    appendCell(row, item.format);
+    appendCell(row, item.crs || '—');
+    appendCell(row, String(item.feature_count));
+    appendCell(row, item.health, 'health-' + item.health);
+    rows.appendChild(row);
+  });
+}).catch(() => {
+  const rows = document.getElementById('layer-rows');
+  rows.replaceChildren();
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.colSpan = 6;
+  cell.textContent = '載入失敗';
+  row.appendChild(cell);
+  rows.appendChild(row);
+});
+</script>
+{% endblock %}
